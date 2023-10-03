@@ -1,8 +1,9 @@
+#importing neccessary library
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Database of doctors
+# Data of doctors
 doctors = [
     {
         "id": 1,
@@ -49,14 +50,19 @@ doctors = [
         ],
     },
 ]
+#created empty list
 appointments=[]
 
-# Get a list of all doctors
+@app.route("/", methods=["GET"])
+def get_welcome():
+    return jsonify("Welcome to doctor booking app")
+
+#to Get a list of all doctors
 @app.route("/doctors", methods=["GET"])
 def get_doctors():
     return jsonify(doctors)
 
-# Get the details of a specific doctor
+#to Get the details of a specific doctor
 @app.route("/doctors/<int:doctor_id>", methods=["GET"])
 def get_doctor(doctor_id):
     doctor = next((doctor for doctor in doctors if doctor["id"] == doctor_id), None)
@@ -64,30 +70,30 @@ def get_doctor(doctor_id):
         return jsonify({"error": "Doctor not found"}), 404
     return jsonify(doctor)
 
-# Book an appointment with a doctor
+#To Book an appointment with a doctor
 @app.route("/appointments", methods=["POST"])
 def book_appointment():
     doctor_id = request.json.get("doctor_id")
     date = request.json.get("date")
     time = request.json.get("time")
 
-    # Validate the doctor_id
+    # Validating the doctor_id
     if doctor_id is None or doctor_id < 1 or doctor_id > len(doctors):
         return jsonify({"error": "Invalid doctor ID"}), 400
 
-    # Find the doctor by ID
+    #Finding the doctor by ID
     doctor = next((d for d in doctors if d["id"] == doctor_id), None)
     if doctor is None:
         return jsonify({"error": "Doctor not found"}), 404
 
-    # Check if the date is in the doctor's availability
+    #Checking if the date is in the doctor's availability
     availability_on_date = next((availability for availability in doctor["availability"] if availability["day"] == date), None)
     if availability_on_date is None:
         return jsonify({"error": "Doctor not available on that date"}), 400
 
-    # Check if the time slot is available
+    #Checking if the time slot is available
     if availability_on_date["start_time"] <= time <= availability_on_date["end_time"]:
-        # Book the appointment
+        #Booking the appointment
         appointment = {
             "doctor_id": doctor_id,
             "date": date,
